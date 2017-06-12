@@ -7,6 +7,9 @@
     <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
+
+    <script src="https://unpkg.com/axios@0.12.0/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/lodash@4.13.1/lodash.min.js"></script>
 </head>
 
 <body>
@@ -52,8 +55,9 @@
                     <p>{{message3}}</p>
                     <input type="text" v-model="message3">
 
+                    <hr>
+                    <h3>组件式渲染：</h3>
                     <p>
-                        <span>组件式渲染：</span>
                         <todo-items v-bind:todos="todos"></todo-items>
                     </p>
 
@@ -65,6 +69,24 @@
 
                     <p>Test filter</p>
                     <p>{{myTitle}} : {{myTitle | capitalize}}</p>
+
+                    <p>计算属性</p>
+                    <p>{{reverseMessage2}}</p>
+
+                    <hr>
+                    <h3>yes no question robort</h3>
+                    <p>Ask a yes no question:</p>
+                    <input style="width:400px;" type="text" v-model="question">
+                    <p>{{answer}}</p>
+
+                    <hr>
+                    <h3>todo list</h3>
+                    <input @keyup.enter="addNewTodo" type="text" v-model="newtodotext" style="width: 400px;" placeholder="add new todo text">
+                    <p>TODO List:</p>
+                    <ul>
+                        <li is="todo-item" v-for="(todo,index) in todolist" :title="todo.text" v-on:remove="todolist.splice(index, 1)"></li>
+                    </ul>
+
 
 
                 </div>
@@ -84,6 +106,16 @@
         template: '<ol><li v-for="td in todos">{{td.text}}</li></ol>'
     });
 
+    Vue.component('todo-item',{
+        props: ['title'],
+        template: '\
+                    <li>\
+                      {{ title }}\
+                      <button v-on:click="$emit(\'remove\')">X</button>\
+                    </li>\
+                  ',
+    });
+
     var app = new Vue({
         el:"#app",
         data:{
@@ -100,11 +132,42 @@
             html: '<div class="well">Copyright © 2017 CoMark</div>',
             cbchecked: 1,
             myTitle: "test capitalize",
+            firstname: "mark",
+            lastname: "xiao",
+            fullname: "mark xiao",
+
+            question: "",
+            answer: "I cannot give you an answer until you ask a question!",
+
+            newtodotext: "",
+            todolist: [{text:"test todo"}],
 
         },
         methods: {
             reverseMessage: function  () {
                 this.message2=this.message2.split('').reverse().join('');
+            },
+            getAnswer: _.debounce(
+                function  () {
+                    var vm=this;
+                    if(this.question.indexOf("?")==-1){
+                        vm.answer="Question usually contain a question mark.;-)";
+                        return;
+                    }
+
+                    vm.answer="thinking...";
+                    axios.get("https://yesno.wtf/api")
+                    .then(function  (response) {
+                        vm.answer=_.capitalize(response.data.answer);
+                    })
+                    .catch(function  (error) {
+                        vm.answer="Error! Could not reach the API. "+ error;
+                    });
+                }
+            ,500),
+            addNewTodo: function  () {
+                this.todolist.push({text:this.newtodotext});
+                this.newtodotext="";
             }
         },
         filters: {
@@ -113,7 +176,30 @@
                     return mstr.toUpperCase();
                 });
             }
+        },
+        computed: {
+            reverseMessage2: function  () {
+                return this.message2.split('').reverse().join('');
+            },
+            fullname2: function  () {
+                return this.firstname+' ' + this.lastname;  
+            }
+        },
+        watch: {
+            // firstname: function  (val) {
+            //     this.fullname=this.firstname+' '+ this.lastname;
+            // },
+            // lastname: function  (val) {
+            //     this.fullname=this.firstname+' '+ this.lastname;
+            // },
+            question: function  (val) {
+                this.answer="wait for you stop typing...";
+                this.getAnswer();
+            }
+
+
         }
+
     });
 
 
