@@ -87,7 +87,34 @@
                         <li is="todo-item" v-for="(todo,index) in todolist" :title="todo.text" v-on:remove="todolist.splice(index, 1)"></li>
                     </ul>
 
+                    <hr>
+                    <p>按钮点击了{{clickcount}}次</p>
+                    <button type="butotn" @click="clickcount+=1">点击+1</button>
+                    <button type="butotn" @click="reduceClickCount">点击-1</button>
 
+                    <hr>
+                    <p>多行文本</p>
+                    <p style="white-space: pre;">{{textarea}}</p>
+                    <textarea v-model="textarea" cols="100" rows="5"></textarea>
+                    
+                    <hr>
+                    <p>checkbox+label</p>
+                    <input type="checkbox" id="checkbox" v-model="checked">
+                    <label for="checkbox">{{ checked }}</label>
+
+                    <hr>
+                    <p>v-on emit事件</p>
+                    <p>{{total}}</p>
+                    <sub-emit v-on:subincrement="parentIncrement"></sub-emit>
+                    <sub-emit v-on:subincrement="parentIncrement"></sub-emit>
+                    <script stype="text/template" id="subemit_tpl">
+                        <button type="button" v-on:click="increment">Click+1</button>
+                    </script>
+
+                    <hr>
+
+
+                    <hr>
 
                 </div>
             </div>
@@ -101,6 +128,21 @@
     </div>
 </body>
 <script>
+    Vue.component('sub-emit',{
+        data: function  () {
+            return {
+                counter: 0
+            }
+        },
+        template: '#subemit_tpl',
+        methods: {
+            increment: function  () {
+                this.counter+=1;
+                this.$emit('subincrement');
+            }
+        }
+    });
+
     Vue.component('todo-items',{
         props: ['todos'],
         template: '<ol><li v-for="td in todos">{{td.text}}</li></ol>'
@@ -141,6 +183,11 @@
 
             newtodotext: "",
             todolist: [{text:"test todo"}],
+            clickcount: 0,
+
+            textarea: "",
+            checked: 1,
+            total: 0,
 
         },
         methods: {
@@ -168,6 +215,12 @@
             addNewTodo: function  () {
                 this.todolist.push({text:this.newtodotext});
                 this.newtodotext="";
+            },
+            reduceClickCount: function  () {
+                this.clickcount-=1;
+            },
+            parentIncrement: function  () {
+                this.total+=1;
             }
         },
         filters: {
